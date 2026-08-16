@@ -1,27 +1,23 @@
-using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public class RandomGrideGenerator : MonoBehaviour
 {
     public List<GameObject> tiles = new List<GameObject>();
 
     public List<WeightedRandom> weightedRandomForTileSelection = new List<WeightedRandom>();
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        GiveTilesTags();
-    }
+
+    private bool isFirstSafeTile = false;
+    private Transform firstSafeTile;
+    private int diamondCount = 0;
 
 [ContextMenu("GenerateGrid")]
-    private void GiveTilesTags()
+    public void GiveTilesTags()
     {
         ResetTiles();
         for(int i =0 ;i<tiles.Count;i++)
         {
-            int value = UnityEngine.Random.Range(0,3);
+            int value = GenerateValue();
 
             switch(value)
             {
@@ -29,10 +25,13 @@ public class RandomGrideGenerator : MonoBehaviour
                 tiles[i].tag = "Lava";
                 break;
                 case 1:
+                if(!isFirstSafeTile)
+                    firstSafeTile = tiles[i].transform;
                 tiles[i].tag = "Floor";
                 break;
                 case 2:
                 tiles[i].tag = "Diamond";
+                diamondCount++;
                 break;
             }
 
@@ -42,6 +41,7 @@ public class RandomGrideGenerator : MonoBehaviour
 
     private void ResetTiles()
     {
+        diamondCount = 0;
         foreach(var tile in tiles)
         {
             tile.tag = "Floor";
@@ -49,7 +49,7 @@ public class RandomGrideGenerator : MonoBehaviour
         }
     }
 
-    public int Generate()
+    private int GenerateValue()
     {
         int totalWeight = 0;
 
@@ -77,6 +77,29 @@ public class RandomGrideGenerator : MonoBehaviour
         }
 
         return -1;
+    }
+
+    public Vector3 GetFirstSafeTileData()
+    {
+        return firstSafeTile.position;
+    }
+
+    public int GetDiamondCount()
+    {
+        return diamondCount;
+    }
+
+    public void CloseDiamondBlock(Transform diamondPos)
+    {
+        foreach(var tile in tiles)
+        {
+            if(tile.transform == diamondPos)
+            {
+                tile.tag = "Floor";
+                tile.transform.GetChild(0).gameObject.SetActive(false);
+                break;
+            }
+        }
     }
 }
 
